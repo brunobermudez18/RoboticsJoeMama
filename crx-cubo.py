@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from roboticstoolbox import DHRobot, RevoluteDH, PrismaticDH
 from spatialmath import SE3
 from roboticstoolbox.tools.trajectory import mstraj
+from codigoVerTrayect import plot_robot_trajectory
 
 # Convert degrees to radians
 deg_to_rad = np.pi / 180
@@ -66,9 +67,23 @@ sol = mh5.ikine_LM(T_tool, q0= [0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 
 # Check if solution is valid
 if sol.success:
     print("IK solution found!")
-    mh5.plot(q=sol.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True)
+    #mh5.plot(q=sol.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True)
+    p_lim=[-1, 1, -1, 1, -0.21, 1.5]
+    plot_robot_trajectory(
+        robot=mh5,
+        q_trajectory=sol.q,
+        limits=p_lim,
+        eeframe=True,
+        jointaxes=False,
+        shadow=True,
+        drawing_mode='continuous',  # o 'segments' si prefieres
+        traj_color='r',             # Color de la trayectoria completa
+        drawing_color='b',          # Color del trazo principal
+        dt=0.05,
+        block=True
+    )
 else:
-    print("No valid IK solution found!")
+    print("Fuck off!")
     
 T_tool2 = SE3(-0.21, -0.325, 0.125) 
 T_cubo  = [T_tool2 * SE3(p[0], p[1], p[2]) for p in T]
@@ -76,6 +91,20 @@ T_cubo  = [T_tool2 * SE3(p[0], p[1], p[2]) for p in T]
 sol2 = mh5.ikine_LM(SE3(T_cubo), q0= [0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 0, 0, 0], ilimit = 3000, slimit = 10, tol = 0.000000000001)
 if sol2.success:
     print("IK solution found!")
-    mh5.plot(q=sol2.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True, dt = 0.25)
+    #mh5.plot(q=sol2.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True, dt = 0.25)
+    p_lim=[-1, 1, -1, 1, -0.21, 1.5]
+    plot_robot_trajectory(
+        robot=mh5,
+        q_trajectory=sol2.q,
+        limits=p_lim,
+        eeframe=True,
+        jointaxes=False,
+        shadow=True,
+        drawing_mode='continuous',  # o 'segments' si prefieres
+        traj_color='r',             # Color de la trayectoria completa
+        drawing_color='b',          # Color del trazo principal
+        dt=0.25,
+        block=True
+    )
 else:
     print("Fuck off") 

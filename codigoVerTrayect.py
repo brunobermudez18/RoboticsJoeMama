@@ -147,7 +147,7 @@ def plot_robot_trajectory(robot, q_trajectory, limits=None, eeframe=True, jointa
         env.ax.plot(points_array[:, 0], points_array[:, 1], points_array[:, 2],
                    f'{drawing_color}-', linewidth=2)
 
-    print("Trayectoria completada")
+    print("Trajectory completed!")
 
     # Mantener la visualización si block=True
     if block:
