@@ -63,13 +63,16 @@ sol = mh5.ikine_LM(T_tool, q0= [0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 
 # Check if solution is valid
 if sol.success:
     print("IK solution found!")
-    mh5.plot(q=sol.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True)
+    #mh5.plot(q=sol.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True)
 else:
     print("No valid IK solution found!")
     
-sol2 = mh5.ikine_LM(SE3(T), q0= [0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 0, 0, 0])
+T_tool2 = SE3(-0.21, -0.325, 0.125) 
+T_cubo  = [T_tool2 * SE3(p[0], p[1], p[2]) for p in T]
+    
+sol2 = mh5.ikine_LM(SE3(T_cubo), q0= [0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 0, 0, 0], ilimit = 3000, slimit = 10, tol = 0.000000000001)
 if sol2.success:
     print("IK solution found!")
-    mh5.plot(q=sol2.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True, dt = 0.5)
+    mh5.plot(q=sol2.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True, dt = 0.25)
 else:
-    print("No valid IK solution found!") 
+    print("Fuck off") 
