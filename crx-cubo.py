@@ -17,6 +17,9 @@ mh5 = DHRobot([
     RevoluteDH(d=0.145, a=0.0, alpha = 0, qlim=[-3.93, 3.93]),  # Joint 6: θ6, d=86.5mm, a=0, α=90°
 ], name="Crx5ia", base=np.eye(4))
 
+mh5.qz = [0, 0, 0, 0, 0, 0]  # Zero angles
+#mh5.plot(mh5.qz, block = True)
+
 # Define the TCP (Tool Center Point) alignment
 mh5.tool = SE3.OA([0, 1, 0], [0, 0, 1])  # X-axis forward, Y-axis backward
 #mh5.teach([0, 0, 0, 0, 0, 0])
@@ -63,7 +66,7 @@ sol = mh5.ikine_LM(T_tool, q0= [0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 
 # Check if solution is valid
 if sol.success:
     print("IK solution found!")
-    #mh5.plot(q=sol.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True)
+    mh5.plot(q=sol.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True)
 else:
     print("No valid IK solution found!")
     
