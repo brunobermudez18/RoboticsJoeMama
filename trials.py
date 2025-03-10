@@ -9,17 +9,17 @@ from codigoVerTrayect import plot_robot_trajectory
 deg_to_rad = np.pi / 180
 
 # Define the Motoman MH5 robot using DH parameters
-lrmate = DHRobot([
-    RevoluteDH(d=0.33, a=0.05, alpha=-np.pi/2, qlim=[-2.97, 2.97]),  # Joint 1: θ1, d=330mm, a=0, α=0°
-    RevoluteDH(d=0.0, a=0.33, alpha=0, offset=-np.pi/2, qlim=[-1.13, 2.62]),  # Joint 2: θ2, d=0, a=88mm, α=90°
-    RevoluteDH(d=0.0, a=0.035, alpha=-np.pi/2, qlim=[-2.37, 4.45]),  # Joint 3: θ3, d=0, a=310mm, α=0°
-    RevoluteDH(d=0.335, a=0.0, alpha=np.pi/2, qlim=[-3.32, 3.32]),  # Joint 4: θ4+90°, d=305mm, a=40mm, α=90°
-    RevoluteDH(d=0.0, a=0.0, alpha=-np.pi/2, qlim=[-2.18, 2.18]),  # Joint 5: θ5, d=0, a=0, α=-90°
-    RevoluteDH(d=0.08, a=0.0, alpha=0, qlim=[-6.28, 6.28]),  # Joint 6: θ6, d=86.5mm, a=0, α=90°
-], name="lrmate200ib", base=np.eye(4))
+mh5 = DHRobot([
+    RevoluteDH(d=0.330, a=0.088, alpha=np.pi/2, qlim=[-170 * deg_to_rad, 170 * deg_to_rad]),  # Joint 1
+    RevoluteDH(d=0.0, a=0.31, alpha=0, offset=np.pi/2, qlim=[-65 * deg_to_rad, 150 * deg_to_rad]),  # Joint 2
+    RevoluteDH(d=0.0, a=0.04, alpha=np.pi/2, qlim=[-136 * deg_to_rad, 255 * deg_to_rad]),  # Joint 3
+    RevoluteDH(d=0.305, a=0.0, alpha=np.pi/2, qlim=[-190 * deg_to_rad, 190 * deg_to_rad]),  # Joint 4
+    RevoluteDH(d=0.0, a=0.0, alpha=-np.pi/2, qlim=[-125 * deg_to_rad, 125 * deg_to_rad]),  # Joint 5
+    RevoluteDH(d=0.0865, a=0.0, alpha=0, qlim=[-360 * deg_to_rad, 360 * deg_to_rad]),  # Joint 6
+], name="Motoman_MH5", base=SE3(0, 0, 0))
 
 # Define the TCP (Tool Center Point) alignment
-lrmate.tool = SE3.OA([0, -1, 0], [1, 0, 0])  # X-axis forward, Y-axis backward
+mh5.tool = SE3.OA([0, -1, 0], [1, 0, 0])  # X-axis forward, Y-axis backward
 
 # Define the full cube trajectory (all 12 edges)
 T = np.array([
@@ -56,18 +56,17 @@ ax.scatter(xyz_traj[-1, 0], xyz_traj[-1, 1], xyz_traj[-1, 2], color="blue", mark
 plt.show()
 
 # Define T_tool for inverse kinematics
-T_tool = SE3.Trans(-0.15, 0, 0) * SE3.Trans(xyz_traj) #* SE3.OA([0, -1, 0], [1, 0, 0])
+T_tool = SE3.Trans(-0.15, 0, 0) * SE3.Trans(xyz_traj) * SE3.OA([0, -1, 0], [1, 0, 0])
 
 # Compute inverse kinematics
-sol = lrmate.ikine_LM(T_tool, q0=[0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 0, 0, 0])
+sol = mh5.ikine_LM(T_tool, q0=[0, 0, 0, 0, 0, 0], mask=[1, 1, 1, 0, 0, 0])
 
 # Check if solution is valid
 if sol.success:
     print("IK solution found!")
-    #lrmate.plot(q=sol.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True)
     p_lim=[-1, 1, -1, 1, -0.15, 1.5]
     plot_robot_trajectory(
-        robot=lrmate,
+        robot=mh5,
         q_trajectory=sol.q,
         limits=p_lim,
         eeframe=True,
@@ -90,7 +89,7 @@ if sol.success:
         axs[i].grid(True)
         axs[i].legend()
     axs[5].set_xlabel("Time (s)")
-    plt.suptitle("Joint Angles vs. Time (sol.q)")
+    plt.suptitle("Joint Angles vs. Time (sol 1)")
     plt.tight_layout()
     plt.show()
 else:
@@ -99,13 +98,12 @@ else:
 T_tool2 = SE3(-0.15, 0, 0) 
 T_cubo = [T_tool2 * SE3(p[0], p[1], p[2]) for p in T]
     
-sol2 = lrmate.ikine_LM(SE3(T_cubo), q0=[0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 0, 0, 0], ilimit=3000, slimit=10, tol=0.000000000001)
+sol2 = mh5.ikine_LM(SE3(T_cubo), q0=[0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 0, 0, 0], ilimit=3000, slimit=10, tol=0.000000000001)
 if sol2.success:
     print("IK solution found!")
-    #lrmate.plot(q=sol2.q, limits=[-0.3, 0.8, -0.6, 0.8, -0.1, 1], eeframe=True, shadow=True, jointaxes=False, block=True, dt=0.25)
     p_lim=[-1, 1, -1, 1, -0.15, 1.5]
     plot_robot_trajectory(
-        robot=lrmate,
+        robot=mh5,
         q_trajectory=sol2.q,
         limits=p_lim,
         eeframe=True,
@@ -128,7 +126,7 @@ if sol2.success:
         axs[i].grid(True)
         axs[i].legend()
     axs[5].set_xlabel("Time (s)")
-    plt.suptitle("Joint Angles vs. Time (sol2.q)")
+    plt.suptitle("Joint Angles vs. Time (sol 2)")
     plt.tight_layout()
     plt.show()
 else:
@@ -137,16 +135,16 @@ else:
 # New section: Joint Space Trajectory
 # Convert target coordinates from mm to m
 targets = np.array([
-    [0.63569, 0.00000, 0.36500],  # Target 1
-    [0.68865, 0.13971, 0.30421],  # Target 2
-    [0.62794, 0.08435, 0.24038],  # Target 3
-    [0.68589, -0.03295, 0.31632], # Target 4
-    [0.56899, -0.03295, 0.34820]  # Target 5
+    [563.48 / 1000, 0.0 / 1000, 350.0 / 1000],      # Joint 1: x=563.48 mm, y=0 mm, z=350 mm
+    [623.69 / 1000, 103.92 / 1000, 290.99 / 1000],  # Joint 2: x=623.69 mm, y=103.92 mm, z=290.99 mm
+    [685.27 / 1000, 64.18 / 1000, 214.152 / 1000],  # Joint 3: x=685.27 mm, y=64.18 mm, z=214.152 mm
+    [626.51 / 1000, -13.2 / 1000, 235.06 / 1000],   # Joint 4: x=626.51 mm, y=-13.2 mm, z=235.06 mm
+    [544.37 / 1000, -116.48 / 1000, 291.33 / 1000]  # Joint 5: x=544.37 mm, y=-116.48 mm, z=291.33 mm
 ])
 
 # Compute initial joint configuration (using first target)
-T_tool_start = SE3.Trans(targets[0]) * lrmate.tool
-q_start_result = lrmate.ikine_LM(T_tool_start, q0=[0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 0, 0, 0])
+T_tool_start = SE3.Trans(targets[0]) * mh5.tool
+q_start_result = mh5.ikine_LM(T_tool_start, q0=[0, 0, 0, 0, np.deg2rad(-80), 0], mask=[1, 1, 1, 0, 0, 0])
 if not q_start_result.success:
     raise ValueError("Initial IK solution failed!")
 q_start = q_start_result.q  # Extract the joint configuration
@@ -154,8 +152,8 @@ q_start = q_start_result.q  # Extract the joint configuration
 # Compute joint configurations for each target
 q_configs = [q_start]
 for target in targets[1:]:
-    T_tool = SE3.Trans(target) * lrmate.tool
-    q_result = lrmate.ikine_LM(T_tool, q0=q_configs[-1], mask=[1, 1, 1, 0, 0, 0])
+    T_tool = SE3.Trans(target) * mh5.tool
+    q_result = mh5.ikine_LM(T_tool, q0=q_configs[-1], mask=[1, 1, 1, 0, 0, 0])
     if not q_result.success:
         print(f"Warning: IK failed for target {target}, using previous configuration.")
         q_configs.append(q_configs[-1])
@@ -184,12 +182,12 @@ for i in range(total_segments):
 # Visualize the complete trajectory
 if np.any(q_traj):
     print("Joint space trajectory computed!")
-    lrmate.plot(q=q_traj, limits=[-1, 1, -1, 1, -0.15, 1.5], eeframe=True, shadow=True, jointaxes=False, block=True)
+    mh5.plot(q=q_traj, limits=[-1, 1, -1, 1, -0.15, 1.5], eeframe=True, shadow=True, jointaxes=False, block=True)
 else:
     print("No joint space trajectory due to invalid configurations!")
 
 # Compute end-effector positions for Cartesian trajectory
-T_ee = np.array([lrmate.fkine(qi).t for qi in q_traj])
+T_ee = np.array([mh5.fkine(qi).t for qi in q_traj])
 
 # Plot end-effector trajectory in Cartesian space
 fig = plt.figure()
