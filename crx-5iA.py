@@ -159,11 +159,19 @@ for target in targets[1:]:
         q_configs.append(q_configs[-1])
     else:
         q_configs.append(q_result.q)
+for i, q in enumerate(q_configs):
+    print(f"Configuration {i}: {q}")
+
 
 q_configs = np.array(q_configs)
+q_joints = np.array([[0.47222204,  0.77463871, -0.10679407, -0.90867827,  0.03882374 , 0.],
+                    [0.52874967 , 1.1584852  , 0.28617853 ,-1.26553794 , 0.42773183  ,0.],
+                    [0.17324911  ,0.98406652, -0.53808432 ,-0.8273795 , -0.01610062  ,0. ],
+                    [-0.08112734  ,0.78055705, -0.18976088 ,-1.03770681,  0.22786767 , 0. ],
+                    [-0.65041123  ,0.12306774 ,-0.4653341  ,-1.06213783 , 0.7056781  , 0.]])
 
 # Generate joint space trajectory
-total_segments = len(q_configs) - 1
+total_segments = len(q_joints) - 1
 total_time = 3.0  # 3 seconds per segment
 points_per_segment = 30
 total_points = total_segments * points_per_segment + 1
@@ -171,8 +179,8 @@ t = np.linspace(0, total_time * total_segments, total_points)
 
 q_traj = np.zeros((total_points, 6))
 for i in range(total_segments):
-    q_start = q_configs[i]
-    q_end = q_configs[i + 1]
+    q_start = q_joints[i]
+    q_end = q_joints[i + 1]
     segment_t = np.linspace(0, total_time, points_per_segment + 1)
     segment_traj = jtraj(q_start, q_end, segment_t).q
     start_idx = i * points_per_segment
